@@ -6,7 +6,7 @@ let selectedId = 'zam';
 let state = {
   running:false, paused:false, score:0, misses:0, rank:89, combo:0,
   elapsed:0, spawnAcc:0, nextSpawn:0.72, last:0, playerX:.5, moveDir:0,
-  bossX:.15, bossDir:1, tasks:[], raf:0,
+  bossX:.5, bossDir:1, tasks:[], raf:0,
   power:null, powerUntil:0, powerReadyAt:0, sound:true, audio:null, drag:false
 };
 
@@ -43,7 +43,7 @@ function resetGame(){
   state.tasks.forEach(t=>t.node?.remove());
   Object.assign(state,{
     score:0,misses:0,rank:89,combo:0,elapsed:0,spawnAcc:0,nextSpawn:0.72,
-    playerX:.5,bossX:.15,bossDir:1,tasks:[],power:null,powerUntil:0,powerReadyAt:0
+    playerX:.5,bossX:.5,bossDir:1,tasks:[],power:null,powerUntil:0,powerReadyAt:0
   });
   el('gameOver')?.classList.add('hidden');
   el('pauseOverlay')?.classList.add('hidden');
@@ -62,11 +62,6 @@ function loop(now){
   const worldDt = dt*(slow ? .34 : 1);
   const difficulty = 1 + Math.min(6.5,state.elapsed/16) + Math.min(2.8,state.score/18);
 
-  state.bossX += state.bossDir*worldDt*(.27+.035*difficulty);
-  if(state.bossX>.83){state.bossX=.83;state.bossDir=-1;}
-  if(state.bossX<.03){state.bossX=.03;state.bossDir=1;}
-  updateBoss();
-
   state.playerX=clamp(state.playerX + state.moveDir*dt*.82,.02,.86);
   updatePlayer();
 
@@ -74,33 +69,34 @@ function loop(now){
   if(state.spawnAcc >= state.nextSpawn){
     state.spawnAcc = 0;
 
-    // Неровный ритм босса: паузы, одиночные броски, двойки, тройки и редкие очереди.
-    const r = Math.random();
+    // Босс стоит на месте, но бросает непредсказуемо:
+    // одиночные задачи, короткие серии и редкие внезапные очереди.
+    const roll = Math.random();
     let burst = 1;
-    if(difficulty > 2.0 && r < 0.34) burst = 2;
-    if(difficulty > 3.8 && r < 0.18) burst = 3;
-    if(difficulty > 5.6 && r < 0.07) burst = 4;
+    if(difficulty > 1.8 && roll < .31) burst = 2;
+    if(difficulty > 3.2 && roll < .14) burst = 3;
+    if(difficulty > 5.0 && roll < .045) burst = 4;
 
-    // Иногда босс делает "обманную паузу", а потом бросает пачку.
-    const deceptivePause = Math.random() < 0.14;
-    const baseGap = Math.max(.20, .92 - state.elapsed*.008 - Math.min(.28,state.score*.0045));
-    const jitter = 0.55 + Math.random()*1.05;
-    state.nextSpawn = baseGap * jitter + (deceptivePause ? .55 + Math.random()*.75 : 0);
+    const longPause = Math.random() < .17;
+    const quickRepeat = Math.random() < .16;
+    const baseGap = Math.max(.23, 1.00 - state.elapsed*.0075 - Math.min(.27,state.score*.004));
+    state.nextSpawn =
+      baseGap * (.58 + Math.random()*1.22) +
+      (longPause ? .55 + Math.random()*.95 : 0) -
+      (quickRepeat ? .12 : 0);
 
     for(let n=0;n<burst;n++){
-      const delay = n===0 ? 0 : 70*n + Math.random()*120*n;
+      const delay = n===0 ? 0 : (55 + Math.random()*170)*n + Math.random()*90;
       setTimeout(()=>{
-        if(state.running && !state.paused){
-          spawnTask(difficulty, burst>1);
-        }
+        if(state.running && !state.paused) spawnTask(difficulty, burst>1);
       }, delay);
     }
 
-    // Редкий дополнительный резкий бросок после короткой тишины.
-    if(difficulty > 4.5 && Math.random() < 0.11){
+    // Иногда после apparent тишины прилетает дополнительная задача.
+    if(difficulty > 2.8 && Math.random() < .12){
       setTimeout(()=>{
         if(state.running && !state.paused) spawnTask(difficulty,true);
-      }, 320 + Math.random()*420);
+      }, 260 + Math.random()*620);
     }
   }
 
@@ -123,14 +119,47 @@ function spawnTask(difficulty,burst=false){
   area.appendChild(node);
 
   const w=76;
-  const spread = burst ? (Math.random()-.5)*Math.min(150,r.width*.28) : (Math.random()-.5)*35;
-  const x=clamp(state.bossX*r.width + 28 - w/2 + spread,4,r.width-w-4);
-  const y=72;
-  const vy=145 + Math.random()*85 + difficulty*(22+Math.random()*9);
-  const vx=(Math.random()-.5)*(30+difficulty*7);
+  const y=112;
+
+  // Все броски начинаются рядом с неподвижным боссом.
+  const originX = r.width*.5 - w*.5;
+  const x = clamp(originX + (Math.random()-.5)*18,4,r.width-w-4);
+
+  // Выбираем случайную точку у нижней части экрана.
+  // Поэтому задачи реально разлетаются веером влево, вправо и почти вертикально.
+  const margin=14;
+  let targetX = margin + Math.random()*Math.max(1,r.width-w-margin*2);
+
+  // В сериях чаще разводим соседние задачи в разные края.
+  if(burst && Math.random()<.68){
+    targetX = Math.random()<.5
+      ? margin + Math.random()*Math.max(20,r.width*.28)
+      : r.width-w-margin-Math.random()*Math.max(20,r.width*.28);
+  }
+
+  const vy = 145 + Math.random()*95 + difficulty*(20+Math.random()*8);
+  const travel = Math.max(.9,(r.height-y-105)/vy);
+  let vx = (targetX-x)/travel;
+
+  // Редкий особо резкий боковой бросок.
+  if(Math.random()<.11){
+    vx += (Math.random()<.5?-1:1)*(55+Math.random()*90);
+  }
+  vx = clamp(vx,-220-difficulty*8,220+difficulty*8);
+
   const task={node,x,y,vx,vy,w,h:44};
   state.tasks.push(task);
   drawTask(task);
+
+  // Короткая визуальная реакция босса на бросок.
+  const boss=el('boss');
+  if(boss){
+    boss.classList.remove('throwing');
+    void boss.offsetWidth;
+    boss.classList.add('throwing');
+    clearTimeout(boss._throwTimer);
+    boss._throwTimer=setTimeout(()=>boss.classList.remove('throwing'),120);
+  }
 }
 
 function drawTask(t){
@@ -227,8 +256,8 @@ function subjectAt(position){
 
 function updateRanking(){
   const box=el('rankingRows'); if(!box) return;
-  const size=5;
-  let start=clamp(state.rank-2,1,TOTAL_RANKS-size+1);
+  const size=3;
+  let start=clamp(state.rank-1,1,TOTAL_RANKS-size+1);
   if(state.rank>=TOTAL_RANKS-1) start=TOTAL_RANKS-size+1;
   const rows=[];
   for(let p=start;p<start+size;p++){
@@ -241,7 +270,11 @@ function updatePlayer(){
   const p=el('player'); if(p) p.style.left=(state.playerX*100)+'%';
 }
 function updateBoss(){
-  const b=el('boss'); if(b){ b.style.left=(state.bossX*100)+'%'; b.classList.toggle('flip',state.bossDir<0); }
+  const b=el('boss');
+  if(b){
+    b.style.left='50%';
+    b.classList.remove('flip');
+  }
 }
 
 window.setMove=function(dir){ state.moveDir=dir; };
