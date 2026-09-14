@@ -1,10 +1,10 @@
-const HERO_IMAGES = {"zam": "./assets/zam.webp?v=2.2", "first": "./assets/first.webp?v=2.2", "bif": "./assets/bif.webp?v=2.2", "school21": "./assets/school21.webp?v=2.2", "sitcenter": "./assets/sitcenter.webp?v=2.2", "mfc": "./assets/mfc.webp?v=2.2"};
-const HEROES = {"zam": {"name": "Зам", "power": "Поглощение задач", "desc": "6 секунд задачи поглощаются автоматически."}, "first": {"name": "Первый зам", "power": "Ноутбук наповал", "desc": "Сметает все задачи на экране."}, "bif": {"name": "БИФ", "power": "Шампур решения", "desc": "Одним взмахом убирает все текущие задачи."}, "school21": {"name": "Школа 21", "power": "Возражение", "desc": "Задачи разворачиваются обратно."}, "sitcenter": {"name": "Ситцентр", "power": "Замедление", "desc": "Резко замедляет время вокруг."}, "mfc": {"name": "МФЦ", "power": "Голосовой робот", "desc": "Робот несколько секунд перехватывает задачи."}};
+const HERO_IMAGES = {"zam": "./assets/zam.webp?v=2.5", "first": "./assets/first.webp?v=2.5", "bif": "./assets/bif.webp?v=2.5", "school21": "./assets/school21.webp?v=2.5", "sitcenter": "./assets/sitcenter.webp?v=2.5", "mfc": "./assets/mfc.webp?v=2.5"};
+const HEROES = {"zam": {"name": "Зам", "power": "Поглощение задач", "desc": "6 секунд задачи поглощаются автоматически."}, "first": {"name": "Первый зам", "power": "Многозадачность", "desc": "7 секунд ловит задачи сразу в расширенной зоне."}, "bif": {"name": "БИФ", "power": "Шампур решения", "desc": "Одним взмахом убирает все текущие задачи."}, "school21": {"name": "Школа 21", "power": "Возражение", "desc": "Задачи разворачиваются обратно."}, "sitcenter": {"name": "Ситцентр", "power": "Замедление", "desc": "Резко замедляет время вокруг."}, "mfc": {"name": "МФЦ", "power": "Голосовой робот", "desc": "Робот несколько секунд перехватывает задачи."}};
 const RANKED = ["Москва", "Республика Татарстан", "Московская область", "Санкт-Петербург", "Краснодарский край", "Свердловская область", "Нижегородская область", "Республика Башкортостан", "Ростовская область", "Самарская область", "Челябинская область", "Новосибирская область", "Тюменская область", "Пермский край", "Воронежская область", "Ленинградская область", "Калужская область", "Тульская область", "Липецкая область", "Курская область", "Орловская область", "Тамбовская область", "Брянская область", "Ярославская область", "Владимирская область", "Рязанская область", "Пензенская область", "Саратовская область", "Ульяновская область", "Смоленская область", "Республика Адыгея", "Республика Алтай", "Республика Бурятия", "Республика Дагестан", "Донецкая Народная Республика", "Республика Ингушетия", "Кабардино-Балкарская Республика", "Республика Калмыкия", "Карачаево-Черкесская Республика", "Республика Карелия", "Республика Коми", "Республика Крым", "Луганская Народная Республика", "Республика Марий Эл", "Республика Мордовия", "Республика Саха (Якутия)", "Республика Северная Осетия - Алания", "Республика Тыва", "Удмуртская Республика", "Республика Хакасия", "Чеченская Республика", "Чувашская Республика", "Алтайский край", "Забайкальский край", "Камчатский край", "Красноярский край", "Приморский край", "Ставропольский край", "Хабаровский край", "Амурская область", "Архангельская область", "Астраханская область", "Волгоградская область", "Вологодская область", "Запорожская область", "Ивановская область", "Иркутская область", "Калининградская область", "Кемеровская область - Кузбасс", "Кировская область", "Костромская область", "Курганская область", "Магаданская область", "Мурманская область", "Новгородская область", "Омская область", "Оренбургская область", "Псковская область", "Сахалинская область", "Тверская область", "Томская область", "Херсонская область", "Севастополь", "Еврейская автономная область", "Ненецкий автономный округ", "Ханты-Мансийский автономный округ - Югра", "Чукотский автономный округ", "Ямало-Ненецкий автономный округ"];
 const TOTAL_RANKS = 89;
 const POWER_META = {
   absorb:  {name:'Поглощение задач', icon:'🌀', cls:'fx-absorb'},
-  laptop:  {name:'Ноутбук наповал',  icon:'💻', cls:'fx-laptop'},
+  multi:   {name:'Многозадачность',  icon:'⚙️', cls:'fx-multi'},
   skewer:  {name:'Шампур решения',   icon:'🍢', cls:'fx-skewer'},
   reverse: {name:'Возражение',       icon:'↩️', cls:'fx-reverse'},
   slow:    {name:'Замедление',       icon:'⏳', cls:'fx-slow'},
@@ -12,7 +12,7 @@ const POWER_META = {
 };
 const POWER_CLASSES = Object.values(POWER_META).map(x=>x.cls);
 
-let selectedId = 'zam';
+let selectedId = 'first';
 let state = {
   running:false, paused:false, score:0, misses:0, rank:89, combo:0,
   elapsed:0, spawnAcc:0, nextSpawn:0.72, last:0, playerX:.5, moveDir:0,
@@ -123,13 +123,15 @@ function spawnTask(difficulty,burst=false){
   const area=el('gameArea'); if(!area) return;
   const r=area.getBoundingClientRect();
   const node=document.createElement('div');
-  node.className='task';
+  const hazard = Math.random() < .075;
+  node.className=hazard ? 'task hazard' : 'task';
   const words=['ЗАДАЧА','СРОЧНО','НА ВЧЕРА','ОТЧЁТ','ПИСЬМО','ПОКАЗАТЕЛЬ','СОВЕЩАНИЕ','ПОРУЧЕНИЕ','ТАБЛИЦА','ПРАВКА','СВОДКА','ДОКЛАД'];
-  node.textContent=words[(Math.random()*words.length)|0];
+  node.textContent=hazard ? 'БЮДЖЕТНАЯ ДЫРА' : words[(Math.random()*words.length)|0];
   area.appendChild(node);
 
-  const w=76;
-  const y=112;
+  const w=hazard ? 98 : 76;
+  const h=hazard ? 54 : 44;
+  const y=220;
 
   // Все броски начинаются рядом с неподвижным боссом.
   const originX = r.width*.5 - w*.5;
@@ -148,7 +150,7 @@ function spawnTask(difficulty,burst=false){
   }
 
   const vy = 145 + Math.random()*95 + difficulty*(20+Math.random()*8);
-  const travel = Math.max(.9,(r.height-y-105)/vy);
+  const travel = Math.max(.75,(r.height-y-105)/vy);
   let vx = (targetX-x)/travel;
 
   // Редкий особо резкий боковой бросок.
@@ -157,7 +159,7 @@ function spawnTask(difficulty,burst=false){
   }
   vx = clamp(vx,-220-difficulty*8,220+difficulty*8);
 
-  const task={node,x,y,vx,vy,w,h:44};
+  const task={node,x,y,vx,vy,w,h,hazard};
   state.tasks.push(task);
   drawTask(task);
 
@@ -191,7 +193,17 @@ function updateTasks(dt,now,difficulty){
     if(state.power==='reverse' && now<state.powerUntil){
       t.y -= Math.max(180,t.vy)*dt;
       t.x += t.vx*dt*.3;
-      if(t.y<38){ catchTask(i,true); continue; }
+      if(t.y<180){
+        if(t.hazard){
+          t.node.remove();
+          state.tasks.splice(i,1);
+          toast('Возражение: бюджетная дыра возвращена!');
+          beep(520,.045,'triangle');
+        }else{
+          catchTask(i,true);
+        }
+        continue;
+      }
       drawTask(t); continue;
     }
 
@@ -200,7 +212,9 @@ function updateTasks(dt,now,difficulty){
     if(t.x<2 || t.x>ar.width-t.w-2) t.vx*=-1;
 
     const tl=ax+t.x, tr=tl+t.w, tt=ay+t.y, tb=tt+t.h;
-    const overlap = tr>pr.left+8 && tl<pr.right-8 && tb>pr.top+8 && tt<pr.bottom-8;
+    const multiActive = state.power==='multi' && now<state.powerUntil;
+    const extra = multiActive ? Math.min(105,ar.width*.22) : 0;
+    const overlap = tr>pr.left+8-extra && tl<pr.right-8+extra && tb>pr.top+8 && tt<pr.bottom-8;
     if(overlap){ catchTask(i,false); continue; }
 
     if(t.y > ar.height-5){ missTask(i); continue; }
@@ -213,6 +227,19 @@ function catchTask(i,auto){
   t.node.classList.add('caught');
   setTimeout(()=>t.node.remove(),100);
   state.tasks.splice(i,1);
+
+  if(t.hazard){
+    state.combo=0;
+    const oldRank=state.rank;
+    changeRank(5);
+    flashArrow('down');
+    toast(oldRank===89 ? 'Бюджетная дыра! Ниже уже некуда.' : 'Бюджетная дыра! −5 мест');
+    navigator.vibrate?.([70,45,90]);
+    beep(105,.13,'sawtooth');
+    updateHUD();
+    return;
+  }
+
   state.score++;
   state.combo++;
   if(state.score%2===0 || state.combo>=5){ changeRank(-1); state.combo=0; }
@@ -224,6 +251,13 @@ function catchTask(i,auto){
 function missTask(i){
   const t=state.tasks[i]; if(!t) return;
   t.node.remove(); state.tasks.splice(i,1);
+
+  if(t.hazard){
+    toast('Бюджетную дыру обошли!');
+    beep(460,.035,'sine');
+    return;
+  }
+
   state.misses++; state.combo=0;
   changeRank(1); // at 89 the numeric position stays 89, but the red indicator still appears
   flashArrow('down');
@@ -315,8 +349,7 @@ window.usePower=function(){
     activatePower('absorb',6000,'Поглощение задач!');
   }
   else if(selectedId==='first'){
-    clearTasks(true);
-    activatePower('laptop',900,'Ноутбук наповал!');
+    activatePower('multi',7000,'Многозадачность!');
   }
   else if(selectedId==='bif'){
     clearTasks(false);
@@ -397,6 +430,7 @@ function updatePower(now){
     if(bar){
       const total =
         state.power==='absorb' ? 6000 :
+        state.power==='multi' ? 7000 :
         state.power==='reverse' ? 7000 :
         state.power==='slow' ? 6500 :
         state.power==='robot' ? 7000 : 900;
