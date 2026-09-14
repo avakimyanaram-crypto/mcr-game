@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#ffd47b">
-<meta name="mcr-build" content="github-v2.7-bif-disagreement">
+<meta name="mcr-build" content="github-v2.8-unavoidable-rating-change">
 <title>МЦР - Битва за рейтинг</title>
-<link rel="stylesheet" href="./styles.css?v=2.7">
-<script src="./app.js?v=2.7"></script>
+<link rel="stylesheet" href="./styles.css?v=2.8">
+<script src="./app.js?v=2.8"></script>
 </head>
 <body>
 <section id="startScreen">
@@ -76,8 +76,7 @@
 
     <div id="boss">
       <img src="./assets/boss.webp?v=2.6" alt="Босс">
-      <div class="bossLabel">ШЕФ</div>
-    </div>
+</div>
 
     <div id="ranking">
       <div class="title">Рейтинг РФ</div>
@@ -90,6 +89,11 @@
     </div>
 
     <div id="toast"></div>
+    <div id="ratingChangeEvent" class="ratingChangeEvent hidden">
+      <div class="ratingChangeIcon">↘</div>
+      <div class="ratingChangeText">ИЗМЕНЕНИЕ<br>РАСЧЕТА РЕЙТИНГА</div>
+      <div class="ratingChangePenalty">−5 МЕСТ</div>
+    </div>
     <div id="powerStatus" class="powerStatus hidden">
       <span id="powerStatusIcon">⚡</span>
       <span id="powerStatusName">Суперсила</span>
@@ -129,6 +133,6 @@
     </div>
   </div>
 </section>
-<div class="buildTag">МЦР v2.7</div>
+<div class="buildTag">МЦР v2.8</div>
 </body>
 </html>

@@ -17,7 +17,8 @@ let state = {
   running:false, paused:false, score:0, misses:0, rank:89, combo:0,
   elapsed:0, spawnAcc:0, nextSpawn:0.72, last:0, playerX:.5, moveDir:0,
   bossX:.5, bossDir:1, tasks:[], raf:0,
-  power:null, powerUntil:0, powerReadyAt:0, sound:true, audio:null, drag:false
+  power:null, powerUntil:0, powerReadyAt:0, sound:true, audio:null, drag:false,
+  ratingEvent:false, ratingEventPending:false, nextRatingEvent:18+Math.random()*12
 };
 
 function el(id){ return document.getElementById(id); }
@@ -53,9 +54,10 @@ function resetGame(){
   state.tasks.forEach(t=>t.node?.remove());
   Object.assign(state,{
     score:0,misses:0,rank:89,combo:0,elapsed:0,spawnAcc:0,nextSpawn:0.72,
-    playerX:.5,bossX:.5,bossDir:1,tasks:[],power:null,powerUntil:0,powerReadyAt:0
+    playerX:.5,bossX:.5,bossDir:1,tasks:[],power:null,powerUntil:0,powerReadyAt:0,
+    ratingEvent:false,ratingEventPending:false,nextRatingEvent:18+Math.random()*12
   });
-  el('gameOver')?.classList.add('hidden');
+  el('gameOver')?.classList.add('hidden'); el('ratingChangeEvent')?.classList.add('hidden');
   el('pauseOverlay')?.classList.add('hidden');
   applyPowerVisual(null); updateHUD(); updateRanking(); updatePlayer(); updateBoss(); updatePower(performance.now());
 }
@@ -75,38 +77,51 @@ function loop(now){
   state.playerX=clamp(state.playerX + state.moveDir*dt*.82,.02,.86);
   updatePlayer();
 
-  state.spawnAcc += worldDt;
-  if(state.spawnAcc >= state.nextSpawn){
-    state.spawnAcc = 0;
+  // Когда пришло время изменения расчета рейтинга, новые задачи больше не создаются.
+  // Уже летящие задачи должны закончиться, и только после этого событие появляется.
+  if(!state.ratingEvent && !state.ratingEventPending && state.elapsed>=state.nextRatingEvent){
+    state.ratingEventPending=true;
+  }
 
-    // Босс стоит на месте, но бросает непредсказуемо:
-    // одиночные задачи, короткие серии и редкие внезапные очереди.
-    const roll = Math.random();
-    let burst = 1;
-    if(difficulty > 1.8 && roll < .31) burst = 2;
-    if(difficulty > 3.2 && roll < .14) burst = 3;
-    if(difficulty > 5.0 && roll < .045) burst = 4;
+  if(state.ratingEventPending && state.tasks.length===0 && !state.ratingEvent){
+    triggerRatingChangeEvent();
+  }
 
-    const longPause = Math.random() < .17;
-    const quickRepeat = Math.random() < .16;
-    const baseGap = Math.max(.23, 1.00 - state.elapsed*.0075 - Math.min(.27,state.score*.004));
-    state.nextSpawn =
-      baseGap * (.58 + Math.random()*1.22) +
-      (longPause ? .55 + Math.random()*.95 : 0) -
-      (quickRepeat ? .12 : 0);
+  if(!state.ratingEvent && !state.ratingEventPending){
+    state.spawnAcc += worldDt;
+    if(state.spawnAcc >= state.nextSpawn){
+      state.spawnAcc = 0;
 
-    for(let n=0;n<burst;n++){
-      const delay = n===0 ? 0 : (55 + Math.random()*170)*n + Math.random()*90;
-      setTimeout(()=>{
-        if(state.running && !state.paused) spawnTask(difficulty, burst>1);
-      }, delay);
-    }
+      const roll = Math.random();
+      let burst = 1;
+      if(difficulty > 1.8 && roll < .31) burst = 2;
+      if(difficulty > 3.2 && roll < .14) burst = 3;
+      if(difficulty > 5.0 && roll < .045) burst = 4;
 
-    // Иногда после apparent тишины прилетает дополнительная задача.
-    if(difficulty > 2.8 && Math.random() < .12){
-      setTimeout(()=>{
-        if(state.running && !state.paused) spawnTask(difficulty,true);
-      }, 260 + Math.random()*620);
+      const longPause = Math.random() < .17;
+      const quickRepeat = Math.random() < .16;
+      const baseGap = Math.max(.23, 1.00 - state.elapsed*.0075 - Math.min(.27,state.score*.004));
+      state.nextSpawn =
+        baseGap * (.58 + Math.random()*1.22) +
+        (longPause ? .55 + Math.random()*.95 : 0) -
+        (quickRepeat ? .12 : 0);
+
+      for(let n=0;n<burst;n++){
+        const delay = n===0 ? 0 : (55 + Math.random()*170)*n + Math.random()*90;
+        setTimeout(()=>{
+          if(state.running && !state.paused && !state.ratingEvent && !state.ratingEventPending){
+            spawnTask(difficulty, burst>1);
+          }
+        }, delay);
+      }
+
+      if(difficulty > 2.8 && Math.random() < .12){
+        setTimeout(()=>{
+          if(state.running && !state.paused && !state.ratingEvent && !state.ratingEventPending){
+            spawnTask(difficulty,true);
+          }
+        }, 260 + Math.random()*620);
+      }
     }
   }
 
@@ -123,26 +138,21 @@ function spawnTask(difficulty,burst=false){
   const area=el('gameArea'); if(!area) return;
   const r=area.getBoundingClientRect();
   const node=document.createElement('div');
-  const hazard = Math.random() < .075;
-  node.className=hazard ? 'task hazard' : 'task';
+  node.className='task';
   const words=['ЗАДАЧА','СРОЧНО','НА ВЧЕРА','ОТЧЁТ','ПИСЬМО','ПОКАЗАТЕЛЬ','СОВЕЩАНИЕ','ПОРУЧЕНИЕ','ТАБЛИЦА','ПРАВКА','СВОДКА','ДОКЛАД'];
-  node.textContent=hazard ? 'ИЗМЕНЕНИЕ РАСЧЕТА РЕЙТИНГА' : words[(Math.random()*words.length)|0];
+  node.textContent=words[(Math.random()*words.length)|0];
   area.appendChild(node);
 
-  const w=hazard ? 138 : 76;
-  const h=hazard ? 64 : 44;
+  const w=76;
+  const h=44;
   const y=260;
 
-  // Все броски начинаются рядом с неподвижным боссом.
   const originX = r.width*.5 - w*.5;
   const x = clamp(originX + (Math.random()-.5)*18,4,r.width-w-4);
 
-  // Выбираем случайную точку у нижней части экрана.
-  // Поэтому задачи реально разлетаются веером влево, вправо и почти вертикально.
   const margin=14;
   let targetX = margin + Math.random()*Math.max(1,r.width-w-margin*2);
 
-  // В сериях чаще разводим соседние задачи в разные края.
   if(burst && Math.random()<.68){
     targetX = Math.random()<.5
       ? margin + Math.random()*Math.max(20,r.width*.28)
@@ -153,17 +163,15 @@ function spawnTask(difficulty,burst=false){
   const travel = Math.max(.75,(r.height-y-105)/vy);
   let vx = (targetX-x)/travel;
 
-  // Редкий особо резкий боковой бросок.
   if(Math.random()<.11){
     vx += (Math.random()<.5?-1:1)*(55+Math.random()*90);
   }
   vx = clamp(vx,-220-difficulty*8,220+difficulty*8);
 
-  const task={node,x,y,vx,vy,w,h,hazard};
+  const task={node,x,y,vx,vy,w,h};
   state.tasks.push(task);
   drawTask(task);
 
-  // Короткая визуальная реакция босса на бросок.
   const boss=el('boss');
   if(boss){
     boss.classList.remove('throwing');
@@ -193,17 +201,7 @@ function updateTasks(dt,now,difficulty){
     if(state.power==='reverse' && now<state.powerUntil){
       t.y -= Math.max(180,t.vy)*dt;
       t.x += t.vx*dt*.3;
-      if(t.y<180){
-        if(t.hazard){
-          t.node.remove();
-          state.tasks.splice(i,1);
-          toast('Возражение: изменение расчета рейтинга отклонено!');
-          beep(520,.045,'triangle');
-        }else{
-          catchTask(i,true);
-        }
-        continue;
-      }
+      if(t.y<180){ catchTask(i,true); continue; }
       drawTask(t); continue;
     }
 
@@ -228,18 +226,6 @@ function catchTask(i,auto){
   setTimeout(()=>t.node.remove(),100);
   state.tasks.splice(i,1);
 
-  if(t.hazard){
-    state.combo=0;
-    const oldRank=state.rank;
-    changeRank(5);
-    flashArrow('down');
-    toast(oldRank===89 ? 'Изменение расчета рейтинга! Ниже уже некуда.' : 'Изменение расчета рейтинга! −5 мест');
-    navigator.vibrate?.([70,45,90]);
-    beep(105,.13,'sawtooth');
-    updateHUD();
-    return;
-  }
-
   state.score++;
   state.combo++;
   if(state.score%2===0 || state.combo>=5){ changeRank(-1); state.combo=0; }
@@ -252,18 +238,49 @@ function missTask(i){
   const t=state.tasks[i]; if(!t) return;
   t.node.remove(); state.tasks.splice(i,1);
 
-  if(t.hazard){
-    toast('Изменение расчета рейтинга удалось обойти!');
-    beep(460,.035,'sine');
-    return;
-  }
-
   state.misses++; state.combo=0;
-  changeRank(1); // at 89 the numeric position stays 89, but the red indicator still appears
+  changeRank(1);
   flashArrow('down');
   updateHUD();
   navigator.vibrate?.(35);
   beep(150,.055,'sawtooth');
+}
+
+function triggerRatingChangeEvent(){
+  state.ratingEvent=true;
+  state.ratingEventPending=false;
+
+  const box=el('ratingChangeEvent');
+  const penalty=box?.querySelector('.ratingChangePenalty');
+  const oldRank=state.rank;
+
+  changeRank(5);
+  flashArrow('down');
+
+  if(penalty){
+    penalty.textContent=oldRank===89 ? 'НИЖЕ УЖЕ НЕКУДА' : '−5 МЕСТ';
+  }
+
+  if(box){
+    box.classList.remove('hidden');
+    box.classList.remove('show');
+    void box.offsetWidth;
+    box.classList.add('show');
+  }
+
+  navigator.vibrate?.([80,45,100]);
+  beep(115,.16,'sawtooth');
+
+  setTimeout(()=>{
+    if(box){
+      box.classList.remove('show');
+      box.classList.add('hidden');
+    }
+    state.ratingEvent=false;
+    state.spawnAcc=0;
+    state.nextSpawn=.55+Math.random()*.35;
+    state.nextRatingEvent=state.elapsed+22+Math.random()*16;
+  },2000);
 }
 
 function changeRank(delta){
@@ -480,7 +497,7 @@ window.togglePause=function(){
 };
 window.returnToStart=function(){
   state.running=false; state.paused=false; cancelAnimationFrame(state.raf);
-  state.tasks.forEach(t=>t.node.remove()); state.tasks=[]; applyPowerVisual(null);
+  state.tasks.forEach(t=>t.node.remove()); state.tasks=[]; state.ratingEvent=false; state.ratingEventPending=false; el('ratingChangeEvent')?.classList.add('hidden'); applyPowerVisual(null);
   el('gameScreen')?.classList.add('hidden');
   el('startScreen')?.classList.remove('hidden');
   el('pauseOverlay')?.classList.add('hidden');
