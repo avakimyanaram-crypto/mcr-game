@@ -1,7 +1,17 @@
 const HERO_IMAGES = {"zam": "./assets/zam.webp?v=2.2", "first": "./assets/first.webp?v=2.2", "bif": "./assets/bif.webp?v=2.2", "school21": "./assets/school21.webp?v=2.2", "sitcenter": "./assets/sitcenter.webp?v=2.2", "mfc": "./assets/mfc.webp?v=2.2"};
-const HEROES = {"zam": {"name": "Зам", "power": "Поглощение задач", "desc": "6 секунд задачи поглощаются автоматически."}, "first": {"name": "Первый зам", "power": "Ноутбук наповал", "desc": "Сметает все задачи на экране."}, "bif": {"name": "БИФ", "power": "Шампур решения", "desc": "Одним взмахом убирает все текущие задачи."}, "school21": {"name": "Школа 21", "power": "Переубедить задачу", "desc": "Задачи разворачиваются обратно."}, "sitcenter": {"name": "Ситцентр", "power": "Замедление", "desc": "Резко замедляет время вокруг."}, "mfc": {"name": "МФЦ", "power": "Голосовой робот", "desc": "Робот несколько секунд перехватывает задачи."}};
+const HEROES = {"zam": {"name": "Зам", "power": "Поглощение задач", "desc": "6 секунд задачи поглощаются автоматически."}, "first": {"name": "Первый зам", "power": "Ноутбук наповал", "desc": "Сметает все задачи на экране."}, "bif": {"name": "БИФ", "power": "Шампур решения", "desc": "Одним взмахом убирает все текущие задачи."}, "school21": {"name": "Школа 21", "power": "Возражение", "desc": "Задачи разворачиваются обратно."}, "sitcenter": {"name": "Ситцентр", "power": "Замедление", "desc": "Резко замедляет время вокруг."}, "mfc": {"name": "МФЦ", "power": "Голосовой робот", "desc": "Робот несколько секунд перехватывает задачи."}};
 const RANKED = ["Москва", "Республика Татарстан", "Московская область", "Санкт-Петербург", "Краснодарский край", "Свердловская область", "Нижегородская область", "Республика Башкортостан", "Ростовская область", "Самарская область", "Челябинская область", "Новосибирская область", "Тюменская область", "Пермский край", "Воронежская область", "Ленинградская область", "Калужская область", "Тульская область", "Липецкая область", "Курская область", "Орловская область", "Тамбовская область", "Брянская область", "Ярославская область", "Владимирская область", "Рязанская область", "Пензенская область", "Саратовская область", "Ульяновская область", "Смоленская область", "Республика Адыгея", "Республика Алтай", "Республика Бурятия", "Республика Дагестан", "Донецкая Народная Республика", "Республика Ингушетия", "Кабардино-Балкарская Республика", "Республика Калмыкия", "Карачаево-Черкесская Республика", "Республика Карелия", "Республика Коми", "Республика Крым", "Луганская Народная Республика", "Республика Марий Эл", "Республика Мордовия", "Республика Саха (Якутия)", "Республика Северная Осетия - Алания", "Республика Тыва", "Удмуртская Республика", "Республика Хакасия", "Чеченская Республика", "Чувашская Республика", "Алтайский край", "Забайкальский край", "Камчатский край", "Красноярский край", "Приморский край", "Ставропольский край", "Хабаровский край", "Амурская область", "Архангельская область", "Астраханская область", "Волгоградская область", "Вологодская область", "Запорожская область", "Ивановская область", "Иркутская область", "Калининградская область", "Кемеровская область - Кузбасс", "Кировская область", "Костромская область", "Курганская область", "Магаданская область", "Мурманская область", "Новгородская область", "Омская область", "Оренбургская область", "Псковская область", "Сахалинская область", "Тверская область", "Томская область", "Херсонская область", "Севастополь", "Еврейская автономная область", "Ненецкий автономный округ", "Ханты-Мансийский автономный округ - Югра", "Чукотский автономный округ", "Ямало-Ненецкий автономный округ"];
 const TOTAL_RANKS = 89;
+const POWER_META = {
+  absorb:  {name:'Поглощение задач', icon:'🌀', cls:'fx-absorb'},
+  laptop:  {name:'Ноутбук наповал',  icon:'💻', cls:'fx-laptop'},
+  skewer:  {name:'Шампур решения',   icon:'🍢', cls:'fx-skewer'},
+  reverse: {name:'Возражение',       icon:'↩️', cls:'fx-reverse'},
+  slow:    {name:'Замедление',       icon:'⏳', cls:'fx-slow'},
+  robot:   {name:'Голосовой робот',  icon:'🤖', cls:'fx-robot'}
+};
+const POWER_CLASSES = Object.values(POWER_META).map(x=>x.cls);
+
 let selectedId = 'zam';
 let state = {
   running:false, paused:false, score:0, misses:0, rank:89, combo:0,
@@ -47,7 +57,7 @@ function resetGame(){
   });
   el('gameOver')?.classList.add('hidden');
   el('pauseOverlay')?.classList.add('hidden');
-  updateHUD(); updateRanking(); updatePlayer(); updateBoss(); updatePower(performance.now());
+  applyPowerVisual(null); updateHUD(); updateRanking(); updatePlayer(); updateBoss(); updatePower(performance.now());
 }
 
 function loop(now){
@@ -296,18 +306,44 @@ window.usePower=function(){
   if(!state.running||state.paused) return;
   const now=performance.now();
   if(now<state.powerReadyAt) return;
+
+  // Повтор доступен через 18 секунд с момента нажатия.
+  // Отдельно показываем оставшееся время действия самой силы.
   state.powerReadyAt=now+18000;
 
-  if(selectedId==='zam'){state.power='absorb';state.powerUntil=now+6000;toast('Поглощение задач!');}
-  else if(selectedId==='first'){clearTasks(true);toast('Ноутбук наповал!');}
-  else if(selectedId==='bif'){clearTasks(false);toast('Шампур решения!');}
-  else if(selectedId==='school21'){state.power='reverse';state.powerUntil=now+7000;toast('Задачи переубеждены!');}
-  else if(selectedId==='sitcenter'){state.power='slow';state.powerUntil=now+6500;toast('Замедление!');}
-  else if(selectedId==='mfc'){state.power='robot';state.powerUntil=now+7000;toast('Голосовой робот принимает задачи!');}
+  if(selectedId==='zam'){
+    activatePower('absorb',6000,'Поглощение задач!');
+  }
+  else if(selectedId==='first'){
+    clearTasks(true);
+    activatePower('laptop',900,'Ноутбук наповал!');
+  }
+  else if(selectedId==='bif'){
+    clearTasks(false);
+    activatePower('skewer',900,'Шампур решения!');
+  }
+  else if(selectedId==='school21'){
+    activatePower('reverse',7000,'Возражение!');
+  }
+  else if(selectedId==='sitcenter'){
+    activatePower('slow',6500,'Замедление времени!');
+  }
+  else if(selectedId==='mfc'){
+    activatePower('robot',7000,'Голосовой робот принимает задачи!');
+  }
+
   navigator.vibrate?.(45);
   beep(820,.10,'square');
   updatePower(now);
 };
+
+function activatePower(type,durationMs,message){
+  const now=performance.now();
+  state.power=type;
+  state.powerUntil=now+durationMs;
+  toast(message);
+  applyPowerVisual(type);
+}
 
 function clearTasks(laptop){
   let n=state.tasks.length;
@@ -316,12 +352,89 @@ function clearTasks(laptop){
   if(laptop && n>0){ state.score+=Math.min(3,n); updateHUD(); }
 }
 
+function applyPowerVisual(type){
+  const area=el('gameArea');
+  const player=el('player');
+  if(area){
+    POWER_CLASSES.forEach(c=>area.classList.remove(c));
+    if(type && POWER_META[type]) area.classList.add(POWER_META[type].cls);
+  }
+  if(player){
+    player.dataset.power=type||'';
+  }
+}
+
 function updatePower(now){
-  if(state.power && now>=state.powerUntil) state.power=null;
-  const btn=el('powerBtn'), cd=el('powerCooldown'); if(!btn||!cd) return;
-  const remain=Math.max(0,state.powerReadyAt-now);
-  btn.disabled=remain>0;
-  cd.textContent=remain>0?Math.ceil(remain/1000)+'с':'ГОТОВО';
+  const btn=el('powerBtn');
+  const cd=el('powerCooldown');
+  const bar=el('powerBarFill');
+  const status=el('powerStatus');
+  const statusName=el('powerStatusName');
+  const statusIcon=el('powerStatusIcon');
+  const activeTimeEl=el('powerActiveTime');
+  if(!btn||!cd) return;
+
+  // Если действие закончилось, визуальный эффект снимается,
+  // но перезарядка продолжается отдельно.
+  if(state.power && now>=state.powerUntil){
+    state.power=null;
+    state.powerUntil=0;
+    applyPowerVisual(null);
+  }
+
+  const activeRemain = state.power ? Math.max(0,state.powerUntil-now) : 0;
+  const cooldownRemain = Math.max(0,state.powerReadyAt-now);
+
+  if(state.power && activeRemain>0){
+    const meta=POWER_META[state.power]||{name:'Суперсила',icon:'⚡'};
+    const activeSeconds=(activeRemain/1000).toFixed(1);
+
+    btn.disabled=true;
+    btn.classList.add('is-active');
+    btn.classList.remove('is-cooldown');
+    cd.textContent=`ДЕЙСТВУЕТ ${activeSeconds} с`;
+
+    if(bar){
+      const total =
+        state.power==='absorb' ? 6000 :
+        state.power==='reverse' ? 7000 :
+        state.power==='slow' ? 6500 :
+        state.power==='robot' ? 7000 : 900;
+      bar.style.width=`${Math.max(0,Math.min(100,activeRemain/total*100))}%`;
+    }
+
+    if(status){
+      status.classList.remove('hidden');
+      status.classList.add('active');
+    }
+    if(statusName) statusName.textContent=meta.name;
+    if(statusIcon) statusIcon.textContent=meta.icon;
+    if(activeTimeEl) activeTimeEl.textContent=`${activeSeconds} с`;
+    return;
+  }
+
+  btn.classList.remove('is-active');
+
+  if(status){
+    status.classList.add('hidden');
+    status.classList.remove('active');
+  }
+
+  if(cooldownRemain>0){
+    btn.disabled=true;
+    btn.classList.add('is-cooldown');
+    const sec=Math.ceil(cooldownRemain/1000);
+    cd.textContent=`ПОВТОР ЧЕРЕЗ ${sec} с`;
+    if(bar){
+      // 18 секунд полного цикла перезарядки.
+      bar.style.width=`${Math.max(0,Math.min(100,(1-cooldownRemain/18000)*100))}%`;
+    }
+  } else {
+    btn.disabled=false;
+    btn.classList.remove('is-cooldown');
+    cd.textContent='ГОТОВО';
+    if(bar) bar.style.width='100%';
+  }
 }
 
 window.togglePause=function(){
@@ -333,7 +446,7 @@ window.togglePause=function(){
 };
 window.returnToStart=function(){
   state.running=false; state.paused=false; cancelAnimationFrame(state.raf);
-  state.tasks.forEach(t=>t.node.remove()); state.tasks=[];
+  state.tasks.forEach(t=>t.node.remove()); state.tasks=[]; applyPowerVisual(null);
   el('gameScreen')?.classList.add('hidden');
   el('startScreen')?.classList.remove('hidden');
   el('pauseOverlay')?.classList.add('hidden');
