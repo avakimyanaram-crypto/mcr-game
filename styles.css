@@ -29,15 +29,15 @@ button{font:inherit;color:inherit}
 #gameArea{position:absolute;inset:0;overflow:hidden;touch-action:none}
 .city{position:absolute;left:0;right:0;top:0;height:25%;opacity:.25;background:
  linear-gradient(90deg,transparent 0 3%,#557995 3% 12%,transparent 12% 15%,#557995 15% 27%,transparent 27% 31%,#557995 31% 45%,transparent 45% 49%,#557995 49% 63%,transparent 63% 68%,#557995 68% 82%,transparent 82% 86%,#557995 86% 97%,transparent 97%)}
-#hud{position:absolute;z-index:20;left:8px;right:8px;top:max(8px,env(safe-area-inset-top));display:grid;grid-template-columns:1.15fr .85fr .85fr .7fr;gap:5px;pointer-events:none}
+#hud{position:absolute;z-index:20;left:8px;right:8px;top:max(8px,env(safe-area-inset-top));display:grid;grid-template-columns:1.15fr .82fr .82fr .70fr;gap:5px;pointer-events:none}
 .hudBox{background:rgba(255,255,255,.94);border:2px solid var(--ink);border-radius:12px;padding:5px 6px;box-shadow:0 3px 0 rgba(36,33,56,.12);min-width:0}
 .hudLabel{display:block;font-size:8px;font-weight:900;opacity:.62;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hudValue{font-size:14px;font-weight:1000;white-space:nowrap}
 #rankArrow.up{color:#1c9a4a} #rankArrow.down{color:#d93338}
-#boss{position:absolute;z-index:8;top:128px;left:50%;width:92px;height:108px;transform:translateX(-50%);transition:transform .12s ease;will-change:transform}
+#boss{position:absolute;z-index:8;top:128px;left:50%;width:136px;height:108px;transform:translateX(-50%);transition:transform .12s ease;will-change:transform}
 #boss.flip img{transform:scaleX(-1)}
-#boss img{width:100%;height:100%;object-fit:cover;object-position:50% 12%;border-radius:23px;border:3px solid var(--ink);background:white;box-shadow:0 6px 0 rgba(36,33,56,.16)}
-.bossLabel{position:absolute;top:99px;left:50%;transform:translateX(-50%);background:#fff;border:2px solid var(--ink);border-radius:999px;padding:3px 9px;font-size:9px;font-weight:1000;white-space:nowrap}
+#boss img{width:100%;height:100%;object-fit:cover;object-position:50% 42%;border-radius:22px;border:3px solid var(--ink);background:white;box-shadow:0 6px 0 rgba(36,33,56,.16)}
+.bossLabel{position:absolute;top:99px;left:50%;transform:translateX(-50%);background:#fff;border:2px solid var(--ink);border-radius:999px;padding:3px 10px;font-size:10px;font-weight:1000;white-space:nowrap}
 .task{position:absolute;z-index:9;width:76px;height:44px;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px;background:#fffdf4;border:3px solid var(--ink);border-radius:8px;font-size:10px;font-weight:1000;box-shadow:0 5px 0 rgba(36,33,56,.16);will-change:transform}
 .task:before{content:"";position:absolute;top:6px;left:7px;right:7px;height:2px;background:#d8d3c8;box-shadow:0 7px 0 #e4dfd5}
 .task{color:#302b3d} .task.caught{opacity:0;transform:scale(.25)!important;transition:.1s}
@@ -48,8 +48,8 @@ button{font:inherit;color:inherit}
 #ranking .title{font-size:7px;font-weight:1000;margin-bottom:3px;opacity:.72;text-align:center;letter-spacing:.04em}
 .rankRow{display:grid;grid-template-columns:18px minmax(0,1fr) 10px;gap:2px;align-items:center;padding:4px 5px;border:0;border-radius:7px;background:rgba(255,255,255,.06);font-size:7px;line-height:1.04;min-width:0}
 .rankRow:first-child{border-top:0} .rankRow.me{background:#ff6d50;border-radius:7px;font-weight:1000} .rankRow i{font-style:normal;color:#ffd55d}
-#controls{position:absolute;z-index:25;left:8px;right:8px;bottom:max(10px,env(safe-area-inset-bottom));display:grid;grid-template-columns:64px 64px 1fr;gap:7px}
-.ctrl,#powerBtn,#pauseBtn,#soundBtn{position:absolute;z-index:30;top:126px;width:38px;height:38px;border-radius:50%;background:#fff}
+#controls{position:absolute;z-index:25;left:8px;right:8px;bottom:max(16px,env(safe-area-inset-bottom));display:grid;grid-template-columns:64px 64px minmax(0,1fr);gap:7px}
+.ctrl,#powerBtn{border:3px solid var(--ink);box-shadow:0 5px 0 rgba(36,33,56,.34);font-weight:1000}
 .ctrl{height:58px;border-radius:17px;background:#fff;font-size:24px}
 #powerBtn{position:relative;overflow:hidden;height:58px;border-radius:17px;background:#7b64df;color:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:11px;line-height:1.05}
 #powerBtn:disabled{opacity:.92}
@@ -58,8 +58,8 @@ button{font:inherit;color:inherit}
 #powerCooldown{font-size:9px;margin-top:3px;font-weight:1000}
 #powerBar{position:absolute;left:7px;right:7px;bottom:5px;height:4px;border-radius:999px;background:rgba(255,255,255,.2);overflow:hidden}
 #powerBarFill{display:block;height:100%;width:100%;border-radius:999px;background:#fff;transition:width .08s linear}
-#pauseBtn,#soundBtn{position:absolute;z-index:30;top:54px;width:38px;height:38px;border-radius:50%;background:#fff}
-#pauseBtn{right:51px} #soundBtn{right:7px}
+
+ 
 #toast{position:absolute;z-index:40;left:50%;top:245px;transform:translate(-50%,-12px);background:#28243a;color:#fff;padding:8px 14px;border-radius:999px;font-size:11px;font-weight:1000;opacity:0;pointer-events:none;transition:.15s;max-width:90vw;text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 .overlay{position:absolute;z-index:60;inset:0;background:rgba(34,31,48,.62);display:flex;align-items:center;justify-content:center;padding:18px}
@@ -156,20 +156,6 @@ button{font:inherit;color:inherit}
 
 .rankRow span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-.task.hazard{
-  width:98px;height:54px;background:radial-gradient(circle at 50% 48%,#54131a 0 44%,#17080b 46% 100%);
-  color:#fff;border-color:#ff3b32;border-width:4px;border-radius:50%;
-  font-size:9px;line-height:1.05;text-shadow:0 1px 1px #000;
-  box-shadow:0 0 0 3px rgba(255,48,39,.22),0 0 18px rgba(255,48,39,.65),0 5px 0 rgba(36,33,56,.18);
-  animation:hazardPulse .55s ease-in-out infinite alternate;
-}
-.task.hazard:before{
-  content:"!";top:-14px;left:50%;right:auto;width:24px;height:24px;transform:translateX(-50%);
-  display:grid;place-items:center;background:#ff352d;color:#fff;border:3px solid #fff;border-radius:50%;
-  box-shadow:none;font-size:14px;font-weight:1000
-}
-@keyframes hazardPulse{
-  from{filter:brightness(.92);box-shadow:0 0 0 2px rgba(255,48,39,.20),0 0 12px rgba(255,48,39,.45),0 5px 0 rgba(36,33,56,.18)}
   to{filter:brightness(1.16);box-shadow:0 0 0 5px rgba(255,48,39,.18),0 0 24px rgba(255,48,39,.78),0 5px 0 rgba(36,33,56,.18)}
 }
 
@@ -188,3 +174,75 @@ button{font:inherit;color:inherit}
 }
 #gameArea.fx-multi .powerStatus{background:#fff6d7}
 @keyframes multiPulse{from{transform:scale(.88);opacity:.55}to{transform:scale(1.07);opacity:1}}
+
+.hudActions{
+  padding:4px!important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  pointer-events:auto;
+}
+.hudIcon{
+  flex:1 1 0;
+  min-width:0;
+  height:34px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border:2px solid var(--ink);
+  border-radius:10px;
+  background:#fff;
+  color:var(--ink);
+  box-shadow:0 2px 0 rgba(36,33,56,.20);
+  font-size:17px;
+  font-weight:1000;
+}
+.hudIcon:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(36,33,56,.20)}
+
+.task.hazard{
+  width:138px!important;
+  height:64px!important;
+  padding:8px 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  white-space:normal;
+  background:linear-gradient(145deg,#7d1218 0%,#2a090d 100%);
+  color:#fff;
+  border:4px solid #ff443b;
+  border-radius:15px;
+  font-size:9.5px;
+  line-height:1.08;
+  letter-spacing:.01em;
+  font-weight:1000;
+  text-shadow:0 1px 2px #000;
+  box-shadow:0 0 0 3px rgba(255,68,59,.18),0 0 20px rgba(255,45,38,.55),0 5px 0 rgba(36,33,56,.18);
+  animation:hazardReadablePulse .6s ease-in-out infinite alternate;
+}
+.task.hazard:before{
+  content:"!";
+  position:absolute;
+  top:-11px;
+  right:-8px;
+  left:auto;
+  width:23px;
+  height:23px;
+  display:grid;
+  place-items:center;
+  background:#ff3b32;
+  color:#fff;
+  border:3px solid #fff;
+  border-radius:50%;
+  box-shadow:0 2px 5px rgba(0,0,0,.25);
+  font-size:14px;
+  font-weight:1000;
+}
+@keyframes hazardReadablePulse{
+  from{filter:brightness(.95);transform:scale(.98)}
+  to{filter:brightness(1.13);transform:scale(1.025)}
+}
+
+#controls .ctrl,#controls #powerBtn{position:relative!important;top:auto!important;left:auto!important;right:auto!important}
+#powerBtn{min-width:0}

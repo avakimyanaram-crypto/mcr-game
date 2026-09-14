@@ -126,12 +126,12 @@ function spawnTask(difficulty,burst=false){
   const hazard = Math.random() < .075;
   node.className=hazard ? 'task hazard' : 'task';
   const words=['ЗАДАЧА','СРОЧНО','НА ВЧЕРА','ОТЧЁТ','ПИСЬМО','ПОКАЗАТЕЛЬ','СОВЕЩАНИЕ','ПОРУЧЕНИЕ','ТАБЛИЦА','ПРАВКА','СВОДКА','ДОКЛАД'];
-  node.textContent=hazard ? 'БЮДЖЕТНАЯ ДЫРА' : words[(Math.random()*words.length)|0];
+  node.textContent=hazard ? 'ИЗМЕНЕНИЕ РАСЧЕТА РЕЙТИНГА' : words[(Math.random()*words.length)|0];
   area.appendChild(node);
 
-  const w=hazard ? 98 : 76;
-  const h=hazard ? 54 : 44;
-  const y=220;
+  const w=hazard ? 138 : 76;
+  const h=hazard ? 64 : 44;
+  const y=260;
 
   // Все броски начинаются рядом с неподвижным боссом.
   const originX = r.width*.5 - w*.5;
@@ -197,7 +197,7 @@ function updateTasks(dt,now,difficulty){
         if(t.hazard){
           t.node.remove();
           state.tasks.splice(i,1);
-          toast('Возражение: бюджетная дыра возвращена!');
+          toast('Возражение: изменение расчета рейтинга отклонено!');
           beep(520,.045,'triangle');
         }else{
           catchTask(i,true);
@@ -233,7 +233,7 @@ function catchTask(i,auto){
     const oldRank=state.rank;
     changeRank(5);
     flashArrow('down');
-    toast(oldRank===89 ? 'Бюджетная дыра! Ниже уже некуда.' : 'Бюджетная дыра! −5 мест');
+    toast(oldRank===89 ? 'Изменение расчета рейтинга! Ниже уже некуда.' : 'Изменение расчета рейтинга! −5 мест');
     navigator.vibrate?.([70,45,90]);
     beep(105,.13,'sawtooth');
     updateHUD();
@@ -253,7 +253,7 @@ function missTask(i){
   t.node.remove(); state.tasks.splice(i,1);
 
   if(t.hazard){
-    toast('Бюджетную дыру обошли!');
+    toast('Изменение расчета рейтинга удалось обойти!');
     beep(460,.035,'sine');
     return;
   }
